@@ -9,6 +9,7 @@ from sys import stderr
 
 CONTENT_LAYER = 'relu4_2'
 STYLE_LAYERS = ('relu1_1', 'relu2_1', 'relu3_1', 'relu4_1', 'relu5_1')
+EX_STYLE_LAYERS = ('relu1_1', 'relu2_1')
 
 
 try:
@@ -53,8 +54,18 @@ def stylize(network, initial, content, styles, iterations,
             for layer in STYLE_LAYERS:
                 features = net[layer].eval(feed_dict={image: style_pre})
                 features = np.reshape(features, (-1, features.shape[3]))
-                gram = np.matmul(features.T, features) / features.size
+                #gram = np.matmul(features.T, features) / features.size
+                gram = features
                 style_features[i][layer] = gram
+
+    grams = style_features
+    for layer in STYLE_LAYERS:
+        num_filters = grams[0][layer].shape[1]
+        for i in range(num_filters):
+            k = int(rand() * num_filters)
+            grams[0][layer][:, i] = grams[k][layer][:, i]
+        grams[0][layer] = np.matmul(grams[0][layer].T, grams[0][layer]) / grams[0][layer].size
+
 
     # make stylized image using backpropogation
     with tf.Graph().as_default():
@@ -73,7 +84,8 @@ def stylize(network, initial, content, styles, iterations,
                 content_features[CONTENT_LAYER].size)
         # style loss
         style_loss = 0
-        for i in range(len(styles)):
+        for i in range(1):
+        #for i in range(len(styles)):
             style_losses = []
             for style_layer in STYLE_LAYERS:
                 layer = net[style_layer]
@@ -81,7 +93,8 @@ def stylize(network, initial, content, styles, iterations,
                 size = height * width * number
                 feats = tf.reshape(layer, (-1, number))
                 gram = tf.matmul(tf.transpose(feats), feats) / size
-                style_gram = style_features[i][style_layer]
+                #style_gram = style_features[i][style_layer]
+                style_gram = grams[i][style_layer]
                 style_losses.append(2 * tf.nn.l2_loss(gram - style_gram) / style_gram.size)
             style_loss += style_weight * style_blend_weights[i] * reduce(tf.add, style_losses)
         # total variation denoising
