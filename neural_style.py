@@ -17,7 +17,7 @@ TV_WEIGHT = 1e2
 LEARNING_RATE = 1e1
 STYLE_SCALE = 1.0
 ITERATIONS = 1000
-VGG_PATH = 'imagenet-vgg-verydeep-19.mat'
+VGG_PATH = 'vgg.mat'
 
 
 def build_parser():

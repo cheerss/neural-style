@@ -62,7 +62,7 @@ def stylize(network, initial, content, styles, iterations,
     for layer in STYLE_LAYERS:
         num_filters = grams[0][layer].shape[1]
         for i in range(num_filters):
-            k = int(rand() * num_filters)
+            k = int(np.random.rand() * num_filters)
             grams[0][layer][:, i] = grams[k][layer][:, i]
         grams[0][layer] = np.matmul(grams[0][layer].T, grams[0][layer]) / grams[0][layer].size
 
