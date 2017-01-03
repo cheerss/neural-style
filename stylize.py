@@ -9,7 +9,7 @@ from sys import stderr
 
 CONTENT_LAYER = 'relu4_2'
 STYLE_LAYERS = ('relu1_1', 'relu2_1', 'relu3_1', 'relu4_1', 'relu5_1')
-EX_STYLE_LAYERS = ('relu1_1', 'relu2_1')
+EX_STYLE_LAYERS = ('relu2_1', 'relu3_1')
 
 
 try:
@@ -59,12 +59,17 @@ def stylize(network, initial, content, styles, iterations,
                 style_features[i][layer] = gram
 
     grams = style_features
+    f = open('examples/change_filter/1-6/para.txt', 'a')
     for layer in STYLE_LAYERS:
         num_filters = grams[0][layer].shape[1]
         for i in range(num_filters):
-            k = int(np.random.rand() * num_filters)
+            k = int(np.random.rand() * len(styles))
+            f.write(str(k) + ' ')
             grams[0][layer][:, i] = grams[k][layer][:, i]
         grams[0][layer] = np.matmul(grams[0][layer].T, grams[0][layer]) / grams[0][layer].size
+        f.write('\n')
+    f.write('\n')
+    f.close()
 
 
     # make stylized image using backpropogation
