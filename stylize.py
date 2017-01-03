@@ -59,18 +59,22 @@ def stylize(network, initial, content, styles, iterations,
                 style_features[i][layer] = gram
 
     grams = style_features
-    f = open('examples/change_filter/1-6/para.txt', 'a')
+    # f = open('examples/change_filter/1-6/para.txt', 'a')
+    # for layer in STYLE_LAYERS:
+    #     num_filters = grams[0][layer].shape[1]
+    #     for i in range(num_filters):
+    #         k = int(np.random.rand() * len(styles))
+    #         f.write(str(k) + ' ')
+    #         grams[0][layer][:, i] = grams[k][layer][:, i]
+    #     grams[0][layer] = np.matmul(grams[0][layer].T, grams[0][layer]) / grams[0][layer].size
+    #     f.write('\n')
+    # f.write('\n')
+    # f.close()
     for layer in STYLE_LAYERS:
         num_filters = grams[0][layer].shape[1]
-        for i in range(num_filters):
-            k = int(np.random.rand() * len(styles))
-            f.write(str(k) + ' ')
-            grams[0][layer][:, i] = grams[k][layer][:, i]
+        k = int(num_filters * style_blend_weights[0])
+        grams[0][layer][:, k:num_filters] = grams[1][layer][:, k:num_filters]
         grams[0][layer] = np.matmul(grams[0][layer].T, grams[0][layer]) / grams[0][layer].size
-        f.write('\n')
-    f.write('\n')
-    f.close()
-
 
     # make stylized image using backpropogation
     with tf.Graph().as_default():
@@ -101,7 +105,7 @@ def stylize(network, initial, content, styles, iterations,
                 #style_gram = style_features[i][style_layer]
                 style_gram = grams[i][style_layer]
                 style_losses.append(2 * tf.nn.l2_loss(gram - style_gram) / style_gram.size)
-            style_loss += style_weight * style_blend_weights[i] * reduce(tf.add, style_losses)
+            style_loss += style_weight * reduce(tf.add, style_losses)
         # total variation denoising
         tv_y_size = _tensor_size(image[:,1:,:,:])
         tv_x_size = _tensor_size(image[:,:,1:,:])
