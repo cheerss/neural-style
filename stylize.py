@@ -54,7 +54,7 @@ def stylize(network, initial, content, styles, iterations,
             for layer in STYLE_LAYERS:
                 features = net[layer].eval(feed_dict={image: style_pre})
                 features = np.reshape(features, (-1, features.shape[3]))
-                #gram = np.matmul(features.T, features) / features.size
+                # gram = np.matmul(features.T, features) / features.size
                 gram = features
                 style_features[i][layer] = gram
 
@@ -79,7 +79,7 @@ def stylize(network, initial, content, styles, iterations,
     # make stylized image using backpropogation
     with tf.Graph().as_default():
         if initial is None:
-            noise = np.random.normal(size=shape, scale=np.std(content) * 0.1)
+            # noise = np.random.normal(size=shape, scale=np.std(content) * 0.1)
             initial = tf.random_normal(shape) * 0.256
         else:
             initial = np.array([vgg.preprocess(initial, mean_pixel)])
@@ -94,7 +94,7 @@ def stylize(network, initial, content, styles, iterations,
         # style loss
         style_loss = 0
         for i in range(1):
-        #for i in range(len(styles)):
+            # for i in range(len(styles)):
             style_losses = []
             for style_layer in STYLE_LAYERS:
                 layer = net[style_layer]
@@ -102,17 +102,17 @@ def stylize(network, initial, content, styles, iterations,
                 size = height * width * number
                 feats = tf.reshape(layer, (-1, number))
                 gram = tf.matmul(tf.transpose(feats), feats) / size
-                #style_gram = style_features[i][style_layer]
+                # style_gram = style_features[i][style_layer]
                 style_gram = grams[i][style_layer]
                 style_losses.append(2 * tf.nn.l2_loss(gram - style_gram) / style_gram.size)
             style_loss += style_weight * reduce(tf.add, style_losses)
         # total variation denoising
-        tv_y_size = _tensor_size(image[:,1:,:,:])
-        tv_x_size = _tensor_size(image[:,:,1:,:])
+        tv_y_size = _tensor_size(image[:, 1:, :, :])
+        tv_x_size = _tensor_size(image[:, :, 1:, :])
         tv_loss = tv_weight * 2 * (
-                (tf.nn.l2_loss(image[:,1:,:,:] - image[:,:shape[1]-1,:,:]) /
+                (tf.nn.l2_loss(image[:, 1:, :, :] - image[:, :shape[1]-1, :, :]) /
                     tv_y_size) +
-                (tf.nn.l2_loss(image[:,:,1:,:] - image[:,:,:shape[2]-1,:]) /
+                (tf.nn.l2_loss(image[:, :, 1:, :] - image[:, :, :shape[2]-1, :]) /
                     tv_x_size))
         # overall loss
         loss = content_loss + style_loss + tv_loss
